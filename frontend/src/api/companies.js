@@ -39,7 +39,7 @@ export class CompaniesClient extends BaseClient {
   async deleteOne(id, optionalHeader) {
     // get all user
     console.log(id,'id to delete in client')
-    const res = await this.delete('company/delete/' + id, optionalHeader);
+    const res = await this.request('company/delete/' + id, 'DELETE', undefined, optionalHeader);
     return res
     //
   }

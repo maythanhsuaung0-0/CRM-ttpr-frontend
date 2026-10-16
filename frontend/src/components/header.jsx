@@ -2,7 +2,8 @@ import React, { useState, useEffect } from "react";
 import { Input } from "./ui/input";
 import { Search, Bell } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
-import { useNavigate } from 'react-router'
+import { Link, useNavigate } from 'react-router'
+import { BrandLogo } from "@/components/brand-logo";
 import { Button } from "./ui/button";
 import {
   DropdownMenu,
@@ -34,9 +35,13 @@ export const Header = ({ currentUser, CloseSidebar, hideSearchbar = false }) => 
     logout()
   }
   return (
-    <div className="w-full flex gap-2 md:gap-3 justify-between border-box px-14 py-3 border-b border-solid border-gray-200 shadow-sm">
+    <div className="w-full flex gap-2 md:gap-3 justify-between border-box bg-white px-4 py-3 sm:px-6 lg:px-8 border-b border-solid border-gray-200">
       <div className="self-center cursor-pointer">
-        {CloseSidebar || <></>}
+        {CloseSidebar || (
+          <Link to={currentUser?.role === 'admin' ? '/admin' : '/'}>
+            <BrandLogo />
+          </Link>
+        )}
       </div>
       {!hideSearchbar &&
         <div className="px-3 py-1 rounded-full bg-secondary md:w-[300px] flex gap-1 focus-within:ring-1 ring-primary ">

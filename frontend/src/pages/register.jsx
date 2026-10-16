@@ -15,7 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {  Briefcase, Eye, EyeOff } from "lucide-react";
+import { Briefcase, Eye, EyeOff } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { validateRegisterationForm } from "@/lib/validations";
@@ -31,10 +31,7 @@ import { useNavigate } from "react-router-dom";
 import { useClient } from "@/lib/dataContext";
 import toast from "react-hot-toast";
 
-
-
 export default function Register() {
-
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const navigate = useNavigate();
@@ -45,35 +42,42 @@ export default function Register() {
       name: "",
       email: "",
       password: "",
-      confirmPassword:"",
+      confirmPassword: "",
       id: "",
       role: "",
     },
   });
 
-  const onSubmit = async (e) => {
-    const { confirmPassword, ...submittedData } = e
-    if (e) {
-      // used http method from utils/http-method.js
-      let res = await client.user.create(submittedData)
-      // if registeration successed
-      if (res.status == 200) {
-        toast.success("successfully registered")
-        console.log("res", res,res.data.role === "admin" && res.data.verified === false);
-        if (res.data.role === "admin" && res.data.verified === false) {
+  const onSubmit = async ({ name, email, password, id, role }) => {
+    registerForm.clearErrors("root.server");
+
+    try {
+      const res = await client.user.create({ name, email, password, id, role });
+
+      if (res?.status === 200) {
+        toast.success("Successfully registered");
+        if (res.data?.role === "admin" && res.data?.verified === false) {
           navigate("/admin/waiting");
-        } else if(res.data.role==='student'){
+        } else {
           navigate("/login");
         }
-      } else if (res.status == 201) {
+      } else if (res?.status === 201) {
         navigate("/account-exists");
       } else {
-        navigate("/error");
+        registerForm.setError("root.server", {
+          type: "server",
+          message: res?.error || res?.message || "Registration failed. Please try again.",
+        });
       }
+    } catch (error) {
+      registerForm.setError("root.server", {
+        type: "server",
+        message: error.message || "Registration failed. Please try again.",
+      });
     }
   };
-  const onError = (e) => {
-    console.log("error", e);
+  const onError = () => {
+    toast.error("Please fix the highlighted fields before registering.");
   };
 
   return (
@@ -161,16 +165,18 @@ export default function Register() {
                     <FormControl>
                       <div className="relative">
                         <Input
-                          type={showConfirmPassword? "text" : "password"}
+                          type={showConfirmPassword ? "text" : "password"}
                           placeholder="Confirm your password"
                           {...field}
                         />
                         <button
                           type="button"
                           className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
-                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                          onClick={() =>
+                            setShowConfirmPassword(!showConfirmPassword)
+                          }
                         >
-                          {showConfirmPassword? (
+                          {showConfirmPassword ? (
                             <EyeOff className="h-4 w-4" />
                           ) : (
                             <Eye className="h-4 w-4" />
@@ -183,7 +189,6 @@ export default function Register() {
                 )}
               />
 
-
               <FormField
                 control={registerForm.control}
                 name="id"
@@ -193,6 +198,8 @@ export default function Register() {
                     <FormControl>
                       <Input
                         placeholder="Enter your EmpID or Student ID"
+                        inputMode="numeric"
+                        maxLength={8}
                         {...field}
                       />
                     </FormControl>
@@ -206,17 +213,25 @@ export default function Register() {
                 render={({ field }) => (
                   <FormItem className={"relative"}>
                     <FormLabel>Choose Role</FormLabel>
-                    <FormControl>
-                      <Select onValueChange={field.onChange}>
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="User Role" {...field} />
+                    <Select
+                      name={field.name}
+                      value={field.value}
+                      onValueChange={field.onChange}
+                    >
+                      <FormControl>
+                        <SelectTrigger
+                          ref={field.ref}
+                          onBlur={field.onBlur}
+                          className="w-full"
+                        >
+                          <SelectValue placeholder="User Role" />
                         </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="student">Student</SelectItem>
-                          <SelectItem value="admin">Admin</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </FormControl>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="student">Student</SelectItem>
+                        <SelectItem value="admin">Admin</SelectItem>
+                      </SelectContent>
+                    </Select>
 
                     <FormMessage
                       className={" text-xs py-0 mr-auto  text-start"}
@@ -225,8 +240,18 @@ export default function Register() {
                 )}
               ></FormField>
 
-              <Button type="submit" className="w-full cursor-pointer">
-                Register Account
+              {registerForm.formState.errors.root?.server && (
+                <p role="alert" className="text-sm text-destructive text-start">
+                  {registerForm.formState.errors.root.server.message}
+                </p>
+              )}
+
+              <Button
+                type="submit"
+                className="w-full cursor-pointer"
+                disabled={registerForm.formState.isSubmitting}
+              >
+                {registerForm.formState.isSubmitting ? "Registering..." : "Register Account"}
               </Button>
             </form>
           </Form>

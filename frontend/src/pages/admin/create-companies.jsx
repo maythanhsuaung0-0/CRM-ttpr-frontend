@@ -101,17 +101,16 @@ const CreateCompanies = () => {
     <>
       {currentUser ? (
         <Layout user={currentUser}>
-          <Topbar title="Add New Company" mode="create" />
-          <div className="w-[80%] m-auto py-4">
+          <Topbar title="Add New Company" mode="create" actions={<Button type="submit" form="create-company-form" disabled={companiesForm.formState.isSubmitting} className="bg-logo text-white hover:bg-logo/90">{companiesForm.formState.isSubmitting ? 'Saving…' : 'Save company'}</Button>} />
+          <div className="crm-form-panel">
+            <div className="crm-form-heading"><h2>Company information</h2><p>Company identity, primary contact, and mailing address.</p></div>
             <Form {...companiesForm}>
               <form
+                id="create-company-form"
                 onSubmit={companiesForm.handleSubmit(onSubmit)}
-                className="grid space-y-2"
+                className="grid gap-6"
               >
-                <Button type="submit" className={"ml-auto"}>
-                  Save
-                </Button>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-1 gap-x-6 gap-y-5 md:grid-cols-2">
                   <FormField
                     control={companiesForm.control}
                     name="name"
@@ -147,7 +146,7 @@ const CreateCompanies = () => {
                     )}
                   ></FormField>
                 </div>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-1 gap-x-6 gap-y-5 md:grid-cols-2">
                   <FormField
                     control={companiesForm.control}
                     name="contactName"
@@ -188,7 +187,7 @@ const CreateCompanies = () => {
                   ></FormField>
 
                 </div>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-1 gap-x-6 gap-y-5 md:grid-cols-2">
 
                   <FormField
                     control={companiesForm.control}
@@ -353,7 +352,7 @@ const CreateCompanies = () => {
                   ></FormField>
                 </div>
 
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-1 gap-x-6 gap-y-5 md:grid-cols-2">
                   <FormField
                     control={companiesForm.control}
                     name="state"
@@ -392,7 +391,7 @@ const CreateCompanies = () => {
                     )}
                   ></FormField>
                 </div>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-1 gap-x-6 gap-y-5 md:grid-cols-2">
                   <FormField
                     control={companiesForm.control}
                     name="street"

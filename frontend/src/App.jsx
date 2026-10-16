@@ -9,6 +9,11 @@ import StudentProfileUpdate from './pages/students/profile'
 import StudentOnboarding from './pages/students/studentOnboarding'
 import CreateDepartments from './pages/admin/create-departments'
 import UpdateDepartments from './pages/admin/update-departments'
+import ViewDepartments from './pages/admin/view-departments'
+import CreateMajors from './pages/admin/create-majors'
+import ViewMajors from './pages/admin/view-majors'
+import UpdateMajors from './pages/admin/update-majors'
+import NotFound from './pages/not-found'
 import Appointment from './pages/admin/appointment'
 import AdminHome from './pages/admin/home'
 import StudentHome from './pages/students/home'
@@ -46,6 +51,12 @@ function App() {
           <Route element={<ProtectedRoute allowRoutes={['admin']} />} >
             <Route path="/admin/dashboard" element={<Dashboard />} />
             <Route path='/admin/create-companies' element={<CreateCompanies />} />
+            <Route path='/admin/create-departments' element={<CreateDepartments />} />
+            <Route path='/admin/view-departments' element={<ViewDepartments />} />
+            <Route path='/admin/view-departments/:id' element={<UpdateDepartments />} />
+            <Route path='/admin/create-majors' element={<CreateMajors />} />
+            <Route path='/admin/view-majors' element={<ViewMajors />} />
+            <Route path='/admin/view-majors/:id' element={<UpdateMajors />} />
             <Route path='/admin/view-companies/:id' element={<UpdateCompanies />} />
             <Route path='/admin/view-students' element={<ViewStudents />} />
             <Route path='/admin/view-staffs' element={<ViewStaff />} />
@@ -69,6 +80,7 @@ function App() {
             <Route path="/internships" element={<Internships />} />
             <Route path="/internships/apply/:id" element={<JobApplication />} />
           </Route>
+          <Route path="*" element={<NotFound />} />
         </Routes>
         <Toaster />
       </BrowserRouter>

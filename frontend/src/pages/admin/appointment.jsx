@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { Topbar } from "@/components/topbar";
@@ -40,7 +40,6 @@ export default function Appointment() {
   ];
   const { client } = useClient();
   const { currentUser, token } = useAuth();
-  const [view, setView] = useState("create");
   const navigate = useNavigate();
   const appointmentForm = useForm({
     resolver: yupResolver(validateAppointmentForm),
@@ -59,9 +58,6 @@ export default function Appointment() {
       status: "confirmed",
       meetingType: "",
       meetingLink: "",
-      participant: "",
-      startTime: "",
-      endTime: "",
     },
   });
   const onSubmit = async(data) => {
@@ -83,15 +79,16 @@ export default function Appointment() {
       {currentUser ? (
         <Layout user={currentUser}>
           <Topbar
-            view={view}
-            setView={setView}
             title="Schedule New Appointment"
             mode="create"
+            actions={<Button type="submit" form="create-appointment-form" disabled={appointmentForm.formState.isSubmitting} className="bg-logo text-white hover:bg-logo/90">{appointmentForm.formState.isSubmitting ? 'Saving…' : 'Schedule appointment'}</Button>}
           />
 
-          <div className="w-[80%] m-auto py-4">
+          <div className="crm-form-panel">
+            <div className="crm-form-heading"><h2>Appointment details</h2><p>Choose participants, a meeting type, and a time that works for your session.</p></div>
             <Form {...appointmentForm}>
               <form
+                id="create-appointment-form"
                 onSubmit={appointmentForm.handleSubmit(onSubmit,onError)}
                 className="space-y-6"
               >
@@ -136,7 +133,7 @@ export default function Appointment() {
                     )}
                   />
                 </div>
-                  <div className="lg:grid grid-cols-2 gap-6 grid">
+                  <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                     <FormField
                       control={appointmentForm.control}
                       name="startTime"
@@ -336,9 +333,6 @@ export default function Appointment() {
                     )}
                   />
                 </div>
-                <Button type="submit" className="w-full cursor-pointer">
-                  Schedule Appointment
-                </Button>
               </form>
             </Form>
           </div>

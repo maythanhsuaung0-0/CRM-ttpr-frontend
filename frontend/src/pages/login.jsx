@@ -10,6 +10,7 @@ import { FormField, FormControl, FormLabel, FormItem, FormMessage, Form } from '
 import toast from "react-hot-toast"
 import { useNavigate } from "react-router"
 import { useClient } from "@/lib/dataContext"
+import { BrandLogo } from "@/components/brand-logo"
 
 export default function LoginPage() {
   const navigate = useNavigate()
@@ -61,7 +62,7 @@ export default function LoginPage() {
           {/* logo */}
           <div className="mx-auto mb-4 w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center">
           </div>
-          <CardTitle className="text-2xl font-bold">Citytech CRM</CardTitle>
+          <CardTitle><BrandLogo /></CardTitle>
           <CardDescription>Log in to your account.</CardDescription>
         </CardHeader>
         <CardContent>

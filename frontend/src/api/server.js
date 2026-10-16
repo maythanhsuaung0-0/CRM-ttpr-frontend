@@ -1,5 +1,3 @@
-import { Client } from "./http-client";
-
 export class HTTPClientError extends Error {
   constructor(message, status, statusText, detail) {
     super(message);

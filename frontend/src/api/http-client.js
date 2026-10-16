@@ -9,6 +9,8 @@ import { UserClient } from "./user";
 import { BaseClient } from "./server";
 import { StudentClient } from "./student";
 import { AppointmentClient } from "./appointment";
+import { InternshipClient } from "./internships";
+import { MajorClient } from "./majors";
 
 export class Client {
   constructor(token) {
@@ -24,6 +26,8 @@ export class Client {
     this.email = new EmailClient(this.token)
     this.student = new StudentClient(this.token)
     this.appointment = new AppointmentClient(this.token)
+    this.internships = new InternshipClient(this.token)
+    this.majors = new MajorClient(this.token)
   }
   user() {
     return this.user;

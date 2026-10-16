@@ -16,6 +16,8 @@
   --color-popover-foreground: var(--popover-foreground);
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
+  --color-logo: var(--logo-color);
+  --color-logo-accent: var(--logo-accent-color);
   --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
   --color-muted: var(--muted);
@@ -43,6 +45,8 @@
 }
 
 :root {
+  --logo-color: #155dfb;
+  --logo-accent-color: #009dc4;
   --radius: 0.65rem;
   --background: oklch(1 0 0);
   --foreground: oklch(0.141 0.005 285.823);
@@ -118,5 +122,37 @@
 
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+@layer components {
+  .crm-form-panel {
+    @apply mt-6 w-full rounded-xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7;
+  }
+
+  .crm-form-panel [data-slot="form-label"] {
+    @apply text-xs font-semibold text-slate-700;
+  }
+
+  .crm-form-panel input,
+  .crm-form-panel textarea,
+  .crm-form-panel [role="combobox"] {
+    @apply rounded-lg border-slate-200 bg-white text-sm shadow-none;
+  }
+
+  .crm-form-panel button[type="submit"] {
+    @apply cursor-pointer bg-logo text-white hover:bg-logo/90;
+  }
+
+  .crm-form-heading {
+    @apply mb-6 border-b border-slate-100 pb-5;
+  }
+
+  .crm-form-heading h2 {
+    @apply text-sm font-semibold text-slate-900;
+  }
+
+  .crm-form-heading p {
+    @apply mt-1 text-xs leading-5 text-slate-500;
   }
 }

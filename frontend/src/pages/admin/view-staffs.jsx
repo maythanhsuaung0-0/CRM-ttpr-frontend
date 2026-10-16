@@ -1,224 +1,78 @@
-import React, { useEffect, useState } from "react";
-import { Button } from "@/components/ui/button";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Edit, Trash2 } from "lucide-react";
-import { useAuth, useClient } from "@/lib/dataContext";
-import { useNavigate, useParams } from "react-router";
-import Layout from "@/components/layout";
-import { Topbar } from "@/components/topbar";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
-import toast from "react-hot-toast";
+import { useState } from 'react';
+import { Pencil, Plus } from 'lucide-react';
+import toast from 'react-hot-toast';
+import Layout from '@/components/layout';
+import { Topbar } from '@/components/topbar';
+import { Button } from '@/components/ui/button';
+import { DirectoryBadge, DirectorySummary, DirectoryTable } from '@/components/directory-table';
+import { RecordActions, RecordEditor } from '@/components/record-actions';
+import { RecordIdentity, RecordLink } from '@/components/record-identity';
+import { useAuth, useClient } from '@/lib/dataContext';
+import { useDirectoryData } from '@/hooks/use-directory-data';
+import { collection, ensureSuccess } from '@/lib/directory-utils';
+import { validateRegisterationForm } from '@/lib/validations';
 
 export default function ViewStaffs() {
-  const [staffs, setStaffs] = useState([]);
-
-  const [currentPage, setCurrentPage] = useState(1);
-  const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
-  const { token, currentUser } = useAuth();
-  const { client } = useClient()
-  const staffsPerPage = 5;
-  async function fetchStaffs(token) {
-    console.log('func is called', token)
-    setLoading(true);
-    try {
-      const res = await client.user.fetchAll()
-      const more = await client.adminProfile.fetchAll();
-
-      console.log(res.data, more, 'ressss')
-      const staffData = res.data.map(async (staff) => {
-        const profile = more.data.find(p => p._id === staff._id);
-        const department = profile?.department_id ? await client.department.fetchOne(profile?.department_id) : null;
-        console.log(department, 'dept')
-        return {
-          ...staff,
-          department: department || 'N/A',
-          position: profile?.position || 'N/A',
-          linkedin: profile?.linkedin || 'N/A'
-        };
-      })
-      let data = await Promise.all(staffData);
-      if (res.status === 200 && more.status === 200) {
-        console.log(data, 'final data')
-        setStaffs(data);
-      }
-      else {
-        console.log(res.error)
-      }
-    } catch (error) {
-      console.error(error, 'cannot fetch staffs');
-    } finally {
-      setLoading(false);
-    }
-  }
-  const viewDetails = (id) => {
-    navigate(`/admin/view-staff-details/${id}`);
-  }
-  useEffect(() => {
-    const loadData = async () => {
-      if (token) {
-        await fetchStaffs(token);
-      }
-    }
-    loadData()
-  }, [token]);
-  const totalPages = Math.ceil(staffs?.length / staffsPerPage);
-  const start = (currentPage - 1) * staffsPerPage;
-  const currentStaffs = staffs?.slice(start, start + staffsPerPage);
-  const handleDelete = async (id, name) => {
-    console.log(id, 'id to delete')
-    try {
-      const res = await client.user.deleteOne({id:id}, { credentials: 'include' });
-      const more = await client.adminProfile.deleteOne({id:id}, { credentials: 'include' });
-      if (res.status !== 200 || more.status !== 200) toast.error(`Deleting ${name} failed`);
-      else {
-        toast.success(`Staff ${name} is deleted successfully`);
-        setStaffs((prev) => prev.filter((c) => c._id !== id));
-        if (currentStaffs.length === 1 && currentPage > 1) {
-          setCurrentPage((p) => p - 1);
-        }
-      }
-    } catch (error) {
-      toast.error("Failed to delete staff");
-      console.error(error);
+  const { currentUser, token } = useAuth();
+  const { client } = useClient();
+  const [editing, setEditing] = useState(null);
+  const [adding, setAdding] = useState(false);
+  const directory = useDirectoryData(async () => {
+    const [usersResponse, profilesResponse, departmentsResponse] = await Promise.all([
+      client.user.fetchAll(), client.adminProfile.fetchAll(), client.departments.fetchAll(),
+    ]);
+    const users = collection(usersResponse).filter(user => ['admin', 'staff'].includes(user.role));
+    const profiles = collection(profilesResponse);
+    const departments = collection(departmentsResponse, 'departments');
+    return users.map(user => {
+      const profile = profiles.find(item => item.user_id === user._id);
+      const department = departments.find(item => item._id === profile?.department_id);
+      return { ...user, department: department?.name, position: profile?.position, linkedin: profile?.linkedin,
+        profileImage: profile?.profileImage, profileId: profile?._id, phone: user.phone || user.phoneNumber,
+        status: user.locked ? 'Locked' : user.verified ? 'Active' : 'Pending',
+        incomplete: !profile?.department_id || !profile?.position,
+      };
+    });
+  }, token);
+  const removeStaff = async staff => {
+    if (staff._id === currentUser._id) throw new Error('You cannot delete your signed-in account.');
+    ensureSuccess(await client.user.deleteOne({ id: staff._id }, { credentials: 'include' }));
+    directory.setData(rows => rows.filter(row => row._id !== staff._id));
+    if (staff.profileId) {
+      const result = await client.adminProfile.deleteOne({ id: staff.profileId }, { credentials: 'include' });
+      if (result.status !== 200) toast.error('The account was deleted, but its profile could not be removed.');
     }
   };
-
-  return (
-    <>
-      {currentUser ? (
-        <Layout user={currentUser}>
-          <Topbar title="Our Staffs" mode="read" creatable={false} />
-
-          <div className="p-6 mt-6 bg-white rounded-lg shadow-sm max-w-7xl mx-auto">
-
-            <h4 className='py-2 font-semibold uppercase'>Staffs</h4>
-            {loading ? <p className="p-6 text-center">Loading...</p> :
-              <Table className={'w-full'}>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Staff ID</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Phone Number</TableHead>
-                    <TableHead>Department</TableHead>
-                    <TableHead>Position</TableHead>
-                    <TableHead>Linkedin</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {currentStaffs.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={7} className="text-center py-6">
-                        No staffs found.
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    currentStaffs.map((staff) => (
-                      <TableRow key={staff._id} onClick={() => viewDetails(staff._id)} className="cursor-pointer hover:bg-gray-50">
-
-                        <TableCell>{staff.name}</TableCell>
-                        <TableCell>
-                          {staff.id}
-                        </TableCell>
-                        <TableCell>{staff.email}</TableCell>
-                        <TableCell>{staff.phoneNumber || 'N/A'}</TableCell>
-                        <TableCell>{staff.department}</TableCell>
-                        <TableCell>{staff.position}</TableCell>
-                        <TableCell>
-                          <a
-                            href={staff.linkedin}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className={staff.linkedin ? "text-blue-600 " : "text-gray-500"}
-                          >
-                            {staff.linkedin === 'N/A' ? 'N/A' : 'LinkedIn'}
-                          </a>
-                        </TableCell>
-                        <TableCell className="flex justify-end gap-2">
-
-                          <AlertDialog >
-                            <AlertDialogTrigger asChild>
-                              <Button
-                                variant="destructive"
-                                size="icon"
-                                aria-label="Delete staff"
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </Button>
-                            </AlertDialogTrigger>
-
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  This action cannot be undone. This will permanently delete staff <b>{staff.name}</b>'s data
-                                  from our servers.
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                <AlertDialogAction
-                                  onClick={() => handleDelete(staff._id, staff.name)}>Continue</AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-
-                          </AlertDialog>
-
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  )}
-
-                </TableBody>
-              </Table>
-            }
-            {/* Pagination */}
-            <div className="flex justify-between items-center mt-6">
-              <Button
-                variant="outline"
-                disabled={currentPage === 1}
-                onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
-              >
-                Previous
-              </Button>
-              <span className="text-sm">
-                Page {currentPage} of {totalPages || 1}
-              </span>
-              <Button
-                variant="outline"
-                disabled={currentPage === totalPages || totalPages === 0}
-                onClick={() =>
-                  setCurrentPage((p) => Math.min(p + 1, totalPages))
-                }
-              >
-                Next
-              </Button>
-
-            </div>
-          </div>
-        </Layout>
-      ) : (
-        <div></div>
-      )}
-    </>
-  );
+  const columns = [
+    { key: 'member', label: 'Staff member', accessor: 'name', render: staff => <RecordIdentity name={staff.name} email={staff.email} id={staff.id} image={staff.profileImage} to={`/admin/view-staff-details/${staff._id}`} /> },
+    { key: 'department', label: 'Department', accessor: 'department', render: staff => <DirectoryBadge tone="cyan">{staff.department}</DirectoryBadge> },
+    { key: 'position', label: 'Position', accessor: 'position', render: staff => <div className="flex items-center gap-2"><DirectoryBadge>{staff.position}</DirectoryBadge><RecordLink url={staff.linkedin} label={`${staff.name} on LinkedIn`} linkedin /></div> },
+    { key: 'phone', label: 'Phone', accessor: 'phone' },
+    { key: 'status', label: 'Status', accessor: 'status', render: staff => <DirectoryBadge tone={staff.status === 'Pending' ? 'orange' : staff.status === 'Active' ? 'green' : 'neutral'}>{staff.status}</DirectoryBadge> },
+    { key: 'actions', label: 'Actions', render: staff => <RecordActions label={staff.name} actions={[{ label: 'View details', to: `/admin/view-staff-details/${staff._id}` }, { label: 'Edit account', icon: <Pencil className="size-4" />, onSelect: () => setEditing(staff) }]} onDelete={() => removeStaff(staff)} deleteDisabled={staff._id === currentUser?._id} /> },
+  ];
+  if (!currentUser) return null;
+  return <Layout user={currentUser}>
+    <Topbar title="Staff directory" description="Manage staff accounts, roles, and department access." actions={<Button onClick={() => setAdding(true)} className="bg-logo text-white hover:bg-logo/90"><Plus className="size-4" />Add staff member</Button>} />
+    <DirectorySummary loading={directory.loading} updatedAt={directory.updatedAt} items={[
+      { label: 'total staff', value: directory.data.length },
+      { label: 'administrators', value: directory.data.filter(row => row.role === 'admin').length },
+      { label: 'incomplete profiles', value: directory.data.filter(row => row.incomplete).length },
+    ]} />
+    <DirectoryTable {...directory} columns={columns} noun="staff" searchFields={['name', 'email', 'id']} searchPlaceholder="Search staff by name, email, or ID" filters={[{ key: 'department', label: 'departments' }, { key: 'position', label: 'positions' }, { key: 'role', label: 'roles' }]} onRefresh={directory.refresh} />
+    <RecordEditor record={editing} onClose={() => setEditing(null)} title="Edit staff account" fields={[
+      { key: 'name', label: 'Full name', required: true, minLength: 3 }, { key: 'email', label: 'Email', type: 'email', required: true }, { key: 'phone', label: 'Phone', type: 'tel' },
+    ]} onSave={async values => { ensureSuccess(await client.user.update({ _id: editing._id, data: values })); await directory.refresh(); }} />
+    <RecordEditor record={adding ? {} : null} onClose={() => setAdding(false)} title="Add staff member" description="Create an administrator account. New accounts appear in staff requests for approval." fields={[
+      { key: 'name', label: 'Full name', required: true, minLength: 3 }, { key: 'email', label: 'Email', type: 'email', required: true },
+      { key: 'id', label: 'Employee ID (8 digits)', required: true, pattern: '[0-9]{8}', maxLength: 8 },
+      { key: 'password', label: 'Password', type: 'password', required: true, minLength: 8 }, { key: 'confirmPassword', label: 'Confirm password', type: 'password', required: true },
+    ]} onSave={async values => {
+      const validated = await validateRegisterationForm.validate({ ...values, role: 'admin' });
+      const response = await client.user.create({ name: validated.name, email: validated.email, id: validated.id, password: validated.password, role: 'admin' });
+      if (response.status === 201) throw new Error(response.data?.message || 'An account with this email already exists.');
+      ensureSuccess(response);
+      await directory.refresh();
+    }} />
+  </Layout>;
 }

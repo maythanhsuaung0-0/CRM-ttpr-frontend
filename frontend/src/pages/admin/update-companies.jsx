@@ -146,17 +146,16 @@ const UpdateCompanies = () => {
   return (
     <>
       <Layout user={currentUser}>
-        <Topbar title={company.name} mode="create" />
-        <div className="w-[80%] m-auto py-4">
+        <Topbar title={`Edit ${company.name}`} description="Update employer details, contact information, and your partnership records." mode="create" actions={<Button type="submit" form="update-company-form" disabled={companiesForm.formState.isSubmitting} className="bg-logo text-white hover:bg-logo/90">{companiesForm.formState.isSubmitting ? 'Saving…' : 'Save changes'}</Button>} />
+        <div className="crm-form-panel">
+            <div className="crm-form-heading"><h2>Company information</h2><p>Keep company, contact, and address information up to date.</p></div>
           <Form {...companiesForm} key={formkey}>
             <form
+              id="update-company-form"
               onSubmit={companiesForm.handleSubmit(onSubmit)}
-              className="grid space-y-2"
+              className="grid gap-6"
             >
-              <Button type="submit" className={"ml-auto"}>
-                Save
-              </Button>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-1 gap-x-6 gap-y-5 md:grid-cols-2">
                 <FormField
                   control={companiesForm.control}
                   name="name"
@@ -193,7 +192,7 @@ const UpdateCompanies = () => {
                   )}
                 ></FormField>
               </div>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-1 gap-x-6 gap-y-5 md:grid-cols-2">
                 <FormField
                   control={companiesForm.control}
                   name="contactName"
@@ -233,7 +232,7 @@ const UpdateCompanies = () => {
                   )}
                 ></FormField>
               </div>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-1 gap-x-6 gap-y-5 md:grid-cols-2">
 
                 <FormField
                   control={companiesForm.control}
@@ -395,7 +394,7 @@ const UpdateCompanies = () => {
                   )}
                 ></FormField>
               </div>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-1 gap-x-6 gap-y-5 md:grid-cols-2">
                 <FormField
                   control={companiesForm.control}
                   name="state"
@@ -435,7 +434,7 @@ const UpdateCompanies = () => {
                 ></FormField>
               </div>
 
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-1 gap-x-6 gap-y-5 md:grid-cols-2">
                 <FormField
                   control={companiesForm.control}
                   name="street"

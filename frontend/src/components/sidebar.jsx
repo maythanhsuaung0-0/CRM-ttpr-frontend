@@ -28,7 +28,8 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible"
 import React from "react";
-import { Link } from "react-router";
+import { Link, useLocation } from "react-router";
+import { BrandLogo } from "@/components/brand-logo";
 const studentItems = [
   {
     title: "Internships",
@@ -160,13 +161,14 @@ const items = [
 ];
 
 export function AppSidebar({ role }) {
+  const { pathname } = useLocation();
   const [isOpen, setIsOpen] = React.useState(false)
   return (
     <Sidebar className={"bg-primary"}>
       <SidebarContent>
         <SidebarGroup className={"px-8 py-3"}>
-          <SidebarGroupLabel className={"font-bold text-lg mb-2 mt-2 text-primary"}>
-            CitytechCRM
+          <SidebarGroupLabel className={"mb-2 mt-2"}>
+            <BrandLogo />
           </SidebarGroupLabel>
           <SidebarGroupContent>
             {role==='admin' ? (
@@ -175,7 +177,7 @@ export function AppSidebar({ role }) {
 
                   <div key={e}>
                     {item.childLinks ?
-                      <Collapsible className="group/collapsible">
+                      <Collapsible className="group/collapsible" defaultOpen={item.childLinks.some(child => child.url === pathname)}>
                         <SidebarMenuItem>
                           <CollapsibleTrigger asChild>
                             <SidebarMenuButton>
@@ -189,7 +191,7 @@ export function AppSidebar({ role }) {
                             <SidebarMenuSub className={'mx-2'}>
                               {item.childLinks.map(cl =>
                                 <SidebarMenuSubItem key={cl.url} className={'px-4 py-1 hover:bg-secondary rounded-sm '}>
-                                  <Link className="flex gap-1" to={cl.url}>
+                                  <Link className={`flex gap-1 ${pathname === cl.url ? "font-semibold text-logo" : ""}`} to={cl.url}>
                                     <span>{cl.title}</span>
                                   </Link>
                                 </SidebarMenuSubItem>
@@ -200,7 +202,7 @@ export function AppSidebar({ role }) {
                       </Collapsible>
                       :
                       <SidebarMenuItem key={item.title}>
-                        <SidebarMenuButton asChild>
+                        <SidebarMenuButton asChild isActive={pathname === item.url} className="data-[active=true]:bg-blue-50 data-[active=true]:text-logo">
                           <Link to={item.url} className="flex gap-2">
                             <item.icon className="w-5 h-5" />
                             <span>{item.title}</span>
@@ -218,7 +220,7 @@ export function AppSidebar({ role }) {
 
                   <div key={e}>
                     {item.childLinks ?
-                      <Collapsible className="group/collapsible">
+                      <Collapsible className="group/collapsible" defaultOpen={item.childLinks.some(child => child.url === pathname)}>
                         <SidebarMenuItem>
                           <CollapsibleTrigger asChild>
                             <SidebarMenuButton>
@@ -232,7 +234,7 @@ export function AppSidebar({ role }) {
                             <SidebarMenuSub className={'mx-2'}>
                               {item.childLinks.map(cl =>
                                 <SidebarMenuSubItem key={cl.url} className={'px-4 py-1 hover:bg-secondary rounded-sm '}>
-                                  <Link className="flex gap-1" to={cl.url}>
+                                  <Link className={`flex gap-1 ${pathname === cl.url ? "font-semibold text-logo" : ""}`} to={cl.url}>
                                     <span>{cl.title}</span>
                                   </Link>
                                 </SidebarMenuSubItem>
@@ -243,7 +245,7 @@ export function AppSidebar({ role }) {
                       </Collapsible>
                       :
                       <SidebarMenuItem key={item.title}>
-                        <SidebarMenuButton asChild>
+                        <SidebarMenuButton asChild isActive={pathname === item.url} className="data-[active=true]:bg-blue-50 data-[active=true]:text-logo">
                           <Link to={item.url} className="flex gap-2">
                             <item.icon className="w-5 h-5" />
                             <span>{item.title}</span>

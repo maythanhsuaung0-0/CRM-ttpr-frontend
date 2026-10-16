@@ -21,16 +21,16 @@ export class DepartmentClient extends BaseClient {
     return res;
   }
 
-  async update() {
+  async update(id, data) {
     // get all user
 
-    const res = await this.post('department/update');
+    const res = await this.patch(`department/${id}`, data);
     return res
   }
 
-  async delete() {
+  async deleteOne(id) {
     // get all user
-    const res = await this.post('department/delete');
+    const res = await this.delete(`department/${id}`);
     return res
   }
 }

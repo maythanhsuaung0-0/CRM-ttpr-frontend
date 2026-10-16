@@ -57,10 +57,10 @@ export class UserClient extends BaseClient {
     return res;
   }
 
-  async update() {
+  async update(data, optionalHeader) {
     // get all user
 
-    const res = await this.post('users/update');
+    const res = await this.post('users/update', data, optionalHeader);
     return res
   }
 
